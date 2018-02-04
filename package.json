@@ -11,14 +11,19 @@
         "Other"
     ],
     "activationEvents": [
+        "onLanguage:solidity",
         "onCommand:extension.sayHello"
     ],
     "main": "./out/extension",
     "contributes": {
         "commands": [
             {
-                "command": "extension.sayHello",
-                "title": "Hello World"
+                "command": "solsec.analyzeActive",
+                "title": "Solsec: Analyze active Solidity contract"
+            },
+            {
+                "command": "solsec.analyzeAll",
+                "title": "Solsec: Analyze all Solidity contracts"
             }
         ]
     },
@@ -34,5 +39,10 @@
         "vscode": "^1.1.6",
         "@types/node": "^7.0.43",
         "@types/mocha": "^2.2.42"
+    },
+    "dependencies": {
+        "solc": "^0.4.19",
+        "vscode-languageclient": "^3.5.0",
+        "vscode-languageserver": "^3.5.0"
     }
 }
