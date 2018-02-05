@@ -1,6 +1,6 @@
-# solsec README
+# mythril README
 
-This is the README for your extension "solsec". After writing up a brief description, we recommend including the following sections.
+This is the README for your extension "mythril". After writing up a brief description, we recommend including the following sections.
 
 ## Features
 

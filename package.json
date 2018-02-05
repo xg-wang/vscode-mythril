@@ -1,6 +1,6 @@
 {
-    "name": "solsec",
-    "displayName": "solsec",
+    "name": "mythril",
+    "displayName": "mythril",
     "description": "Visual Stodio Code Solidity source code security checker",
     "version": "0.0.1",
     "publisher": "xgwang",
@@ -18,12 +18,12 @@
     "contributes": {
         "commands": [
             {
-                "command": "solsec.analyzeActive",
-                "title": "Solsec: Analyze active Solidity contract"
+                "command": "mythril.analyzeActive",
+                "title": "Mythril: Analyze active Solidity contract"
             },
             {
-                "command": "solsec.analyzeAll",
-                "title": "Solsec: Analyze all Solidity contracts"
+                "command": "mythril.analyzeAll",
+                "title": "Mythril: Analyze all Solidity contracts"
             }
         ]
     },
@@ -41,6 +41,8 @@
         "@types/mocha": "^2.2.42"
     },
     "dependencies": {
+        "@types/lodash": "^4.14.100",
+        "lodash": "^4.17.5",
         "solc": "^0.4.19",
         "vscode-languageclient": "^3.5.0",
         "vscode-languageserver": "^3.5.0"

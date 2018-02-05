@@ -1,42 +1,75 @@
 import * as path from 'path'
-import { ExtensionContext, commands, window, workspace } from 'vscode';
+import { ExtensionContext, commands, window, workspace, TextEditor } from 'vscode';
 import { LanguageClient, LanguageClientOptions, ServerOptions, TransportKind } from 'vscode-languageclient';
-import { analyzeActive, analyzeAll } from './commands';
+import { TextDocumentIdentifier, RequestType } from 'vscode-languageserver/lib/main';
+
+interface ActiveAnalysisParams {
+    readonly textDocument: TextDocumentIdentifier
+}
+interface ActiveAnalysisResult {
+    readonly documentVersion: number;
+}
+interface AllAnalysisParams {
+    readonly textDocuments: TextDocumentIdentifier[]
+}
+interface AllAnalysisResult {
+    readonly folderVersion: number;
+}
+namespace MythrilRequest {
+    export const active = new RequestType<
+        ActiveAnalysisParams,
+        ActiveAnalysisResult,
+        void, void>('textDocument/mythril/activeAnalyze');
+    export const all = new RequestType<
+        AllAnalysisParams,
+        AllAnalysisResult,
+        void, void>('textDocument/mythril/allAnalyze');
+}
 
 export function activate(context: ExtensionContext) {
 
-    // The server is implemented in node
-    let serverModule = context.asAbsolutePath(path.join(__dirname, 'server', 'server.js'));
-    // The debug options for the server
+    console.log(path.join(__dirname, 'server', 'server.js'))
+    let serverModule = path.join(__dirname, 'server', 'server.js');
     let debugOptions = { execArgv: ["--nolazy", "--debug=6009"] };
 
-    // If the extension is launched in debug mode then the debug server options are used
-    // Otherwise the run options are used
     let serverOptions: ServerOptions = {
         run : { module: serverModule, transport: TransportKind.ipc },
         debug: { module: serverModule, transport: TransportKind.ipc, options: debugOptions }
     }
 
-    // Options to control the language client
     let clientOptions: LanguageClientOptions = {
-        // Register the server for plain text documents
-        documentSelector: [{scheme: 'file', language: 'solidity'}],
-        // synchronize: {
-        // 	configurationSection: 'solsec',
-        // 	fileEvents: workspace.createFileSystemWatcher('**/.clientrc')
-        // }
-        diagnosticCollectionName: 'solsec'
+        documentSelector: ['solidity'],
+        synchronize: {
+        	configurationSection: 'mythril',
+        	fileEvents: workspace.createFileSystemWatcher('**/.clientrc')
+        },
+        diagnosticCollectionName: 'mythril'
     }
 
-    // Create the language client and start the client.
-    let client = new LanguageClient('solsec', 'Solidity Security Server', serverOptions, clientOptions);
+    let client = new LanguageClient('mythril', 'Solidity Security Server', serverOptions, clientOptions);
 
-    // Push the disposable to the context's subscriptions so that the
-    // client can be deactivated on extension deactivation
+    async function analyzeActive(editor: TextEditor) {
+        if (path.extname(editor.document.fileName) !== '.sol') {
+            window.showWarningMessage('Open a Solidity file to analyze');
+            return;
+        }
+        const uri = editor.document.uri.toString();
+        try {
+            let result = await client.sendRequest(MythrilRequest.active, { textDocument: {uri} });
+            console.log(result);
+            // TODO: if return value exists, open a new tab
+        } catch (error) {
+            window.showErrorMessage('Failed to analyze Solidity file');
+        }
+    }
+
+    function analyzeAll() {
+    }
+
     context.subscriptions.push(
         client.start(),
-        commands.registerCommand('solsec.analyzeActive', analyzeActive),
-        commands.registerCommand('solsec.analyzeAll', analyzeAll)
+        commands.registerTextEditorCommand('mythril.analyzeActive', analyzeActive),
+        commands.registerCommand('mythril.analyzeAll', analyzeAll)
     );
 }
 

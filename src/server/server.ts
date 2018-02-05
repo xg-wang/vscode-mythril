@@ -37,7 +37,6 @@ connection.onInitialize(params => {
     return {
         capabilities: {
             textDocumentSync: documents.syncKind,
-            documentHighlightProvider: true
         }
     }
 });
@@ -54,23 +53,26 @@ interface AllAnalysisParams {
 interface AllAnalysisResult {
     folderVersion: number;
 }
-namespace SolsecRequest {
+namespace MythrilRequest {
     export const active = new RequestType<
         ActiveAnalysisParams,
         ActiveAnalysisResult,
-        void, void>('textDocument/solsec/activeAnalyze');
+        void, void>('textDocument/mythril/activeAnalyze');
     export const all = new RequestType<
         AllAnalysisParams,
         AllAnalysisResult,
-        void, void>('textDocument/solsec/allAnalyze');
+        void, void>('textDocument/mythril/allAnalyze');
 }
 
-connection.onRequest(SolsecRequest.active, async (params) => {
+connection.onRequest(MythrilRequest.active, async (params) => {
+    const uri = params.textDocument.uri;
+    trace(uri)
+    console.log(uri)
     let result: ActiveAnalysisParams | undefined = undefined;
     return {documentVersion: 1};
 });
 
-connection.onRequest(SolsecRequest.all, async (params) => {
+connection.onRequest(MythrilRequest.all, async (params) => {
     let result: AllAnalysisParams | undefined = undefined;
     return {folderVersion: 1};
 });
