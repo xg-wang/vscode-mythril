@@ -11,7 +11,7 @@ export class SolcCompiler {
         this.solc = require('solc');
     }
 
-    compile(name: string, content: string): {[key: string]: CompiledResult } {
+    compile(name: string, content: string): {[fileContract: string]: CompiledResult } {
         let sources: any = {};
         sources[name] = content;
         // TODO: use `compileStandardWrapper` instead
