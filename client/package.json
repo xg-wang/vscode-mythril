@@ -1,0 +1,45 @@
+{
+    "name": "mythril",
+    "displayName": "mythril",
+    "description": "Visual Studio Code Solidity source code security checker",
+    "version": "0.0.1",
+    "publisher": "Xingan Wang",
+    "engines": {
+        "vscode": "^1.16.0"
+    },
+    "categories": [
+        "Other"
+    ],
+    "activationEvents": [
+        "onLanguage:solidity",
+        "onCommand:mythril.analyzeActive"
+    ],
+    "main": "./out/src/extension",
+    "contributes": {
+        "commands": [
+            {
+                "command": "mythril.analyzeActive",
+                "title": "Mythril: Analyze active Solidity contract"
+            },
+            {
+                "command": "mythril.analyzeAll",
+                "title": "Mythril: Analyze all Solidity contracts"
+            }
+        ]
+    },
+    "scripts": {
+        "vscode:prepublish": "tsc -p ./",
+        "compile": "tsc -p ./",
+        "watch": "tsc -w -p ./",
+        "update-vscode": "node ./node_modules/vscode/bin/install",
+        "postinstall": "node ./node_modules/vscode/bin/install"
+    },
+    "dependencies": {
+        "vscode": "^1.1.5",
+        "@types/lodash": "^4.14.101",
+        "lodash": "^4.17.5",
+        "solc": "^0.4.19",
+        "vscode-languageclient": "^3.5.0",
+        "vscode-languageserver": "^3.5.0"
+    }
+}

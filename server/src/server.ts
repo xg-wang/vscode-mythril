@@ -1,15 +1,15 @@
 import {
-    createConnection, IConnection,
-    IPCMessageReader, IPCMessageWriter,
-    TextDocuments, InitializeResult,
-    Files, DiagnosticSeverity, Diagnostic,
-    TextDocumentChangeEvent, TextDocumentPositionParams,
-    CompletionItem, CompletionItemKind,
-    Range, Position, Location, SignatureHelp, RequestType, TextDocumentIdentifier,
+    createConnection,
+    IConnection,
+    IPCMessageReader,
+    IPCMessageWriter,
+    RequestType,
+    TextDocumentIdentifier,
+    TextDocuments,
 } from 'vscode-languageserver';
 
-function trace(message: string, verbose?: string): void {
-	connection.tracer.log(message, verbose);
+function trace(message: string, verbose ? : string): void {
+    connection.tracer.log(message, verbose);
 }
 
 let connection: IConnection = createConnection(new IPCMessageReader(process), new IPCMessageWriter(process));
@@ -54,27 +54,30 @@ interface AllAnalysisResult {
     folderVersion: number;
 }
 namespace MythrilRequest {
-    export const active = new RequestType<
+    export const active = new RequestType <
         ActiveAnalysisParams,
         ActiveAnalysisResult,
-        void, void>('textDocument/mythril/activeAnalyze');
-    export const all = new RequestType<
+        void, void > ('textDocument/mythril/activeAnalyze');
+    export const all = new RequestType <
         AllAnalysisParams,
         AllAnalysisResult,
-        void, void>('textDocument/mythril/allAnalyze');
+        void, void > ('textDocument/mythril/allAnalyze');
 }
 
 connection.onRequest(MythrilRequest.active, async (params) => {
     const uri = params.textDocument.uri;
     trace(uri)
-    console.log(uri)
     let result: ActiveAnalysisParams | undefined = undefined;
-    return {documentVersion: 1};
+    return {
+        documentVersion: 1
+    };
 });
 
 connection.onRequest(MythrilRequest.all, async (params) => {
     let result: AllAnalysisParams | undefined = undefined;
-    return {folderVersion: 1};
+    return {
+        folderVersion: 1
+    };
 });
 
 connection.listen();

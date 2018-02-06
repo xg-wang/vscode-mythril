@@ -1,7 +1,7 @@
 import * as path from 'path'
 import { ExtensionContext, commands, window, workspace, TextEditor } from 'vscode';
 import { LanguageClient, LanguageClientOptions, ServerOptions, TransportKind } from 'vscode-languageclient';
-import { TextDocumentIdentifier, RequestType } from 'vscode-languageserver/lib/main';
+import { TextDocumentIdentifier, RequestType } from 'vscode-languageserver';
 
 interface ActiveAnalysisParams {
     readonly textDocument: TextDocumentIdentifier
@@ -28,9 +28,8 @@ namespace MythrilRequest {
 
 export function activate(context: ExtensionContext) {
 
-    console.log(path.join(__dirname, 'server', 'server.js'))
-    let serverModule = path.join(__dirname, 'server', 'server.js');
-    let debugOptions = { execArgv: ["--nolazy", "--debug=6009"] };
+    let serverModule = context.asAbsolutePath(path.join('server', 'server.js'));
+    let debugOptions = { execArgv: ["--nolazy", "--inspect=6009"] };
 
     let serverOptions: ServerOptions = {
         run : { module: serverModule, transport: TransportKind.ipc },
@@ -40,8 +39,7 @@ export function activate(context: ExtensionContext) {
     let clientOptions: LanguageClientOptions = {
         documentSelector: ['solidity'],
         synchronize: {
-        	configurationSection: 'mythril',
-        	fileEvents: workspace.createFileSystemWatcher('**/.clientrc')
+        	configurationSection: 'mythril'
         },
         diagnosticCollectionName: 'mythril'
     }

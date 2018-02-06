@@ -1,50 +1,23 @@
 {
-    "name": "mythril",
-    "displayName": "mythril",
-    "description": "Visual Stodio Code Solidity source code security checker",
-    "version": "0.0.1",
-    "publisher": "xgwang",
-    "engines": {
-        "vscode": "^1.19.0"
-    },
-    "categories": [
-        "Other"
-    ],
-    "activationEvents": [
-        "onLanguage:solidity",
-        "onCommand:extension.sayHello"
-    ],
-    "main": "./out/extension",
-    "contributes": {
-        "commands": [
-            {
-                "command": "mythril.analyzeActive",
-                "title": "Mythril: Analyze active Solidity contract"
-            },
-            {
-                "command": "mythril.analyzeAll",
-                "title": "Mythril: Analyze all Solidity contracts"
-            }
-        ]
-    },
-    "scripts": {
-        "vscode:prepublish": "npm run compile",
-        "compile": "tsc -p ./",
-        "watch": "tsc -watch -p ./",
-        "postinstall": "node ./node_modules/vscode/bin/install",
-        "test": "npm run compile && node ./node_modules/vscode/bin/test"
-    },
-    "devDependencies": {
-        "typescript": "^2.6.1",
-        "vscode": "^1.1.6",
-        "@types/node": "^7.0.43",
-        "@types/mocha": "^2.2.42"
-    },
-    "dependencies": {
-        "@types/lodash": "^4.14.100",
-        "lodash": "^4.17.5",
-        "solc": "^0.4.19",
-        "vscode-languageclient": "^3.5.0",
-        "vscode-languageserver": "^3.5.0"
-    }
+	"name": "mythril",
+	"displayName": "mythril",
+	"description": "Visual Studio Code Solidity source code security checker",
+	"version": "0.0.1",
+	"publisher": "xgwang",
+	"categories": [
+		"Other"
+	],
+	"scripts": {
+		"postinstall": "cd server && npm install && cd ../client && npm install && cd ..",
+		"compile": "tsc -p client/tsconfig.json && cd server && npm run installServer && cd .. && tsc -p server/tsconfig.json",
+		"compile:client": "tsc -p client/tsconfig.json",
+		"watch:client": "tsc -w -p client/tsconfig.json",
+		"compile:server": "cd server && npm run installServer && cd .. && tsc -p server/tsconfig.json",
+		"watch:server": "cd server && npm run installServer && cd .. && tsc -w -p server/tsconfig.json"
+	},
+	"devDependencies": {
+		"@types/mocha": "^2.2.42",
+		"@types/node": "^6.0.88",
+		"typescript": "^2.5.2"
+	}
 }
