@@ -9,22 +9,28 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const vscode_languageserver_1 = require("vscode-languageserver");
-function trace(message, verbose) {
-    connection.tracer.log(message, verbose);
+const analysis_1 = require("./analysis");
+const connection = vscode_languageserver_1.createConnection(new vscode_languageserver_1.IPCMessageReader(process), new vscode_languageserver_1.IPCMessageWriter(process));
+function log(message) {
+    connection.console.log(message);
 }
-let connection = vscode_languageserver_1.createConnection(new vscode_languageserver_1.IPCMessageReader(process), new vscode_languageserver_1.IPCMessageWriter(process));
-let documents = new vscode_languageserver_1.TextDocuments();
+exports.log = log;
+function error(message) {
+    connection.console.error(message);
+}
+exports.error = error;
+const documents = new vscode_languageserver_1.TextDocuments();
 documents.onDidOpen(e => {
-    trace('onDidOpen');
+    log('onDidOpen');
 });
 documents.onDidChangeContent(e => {
-    trace('onDidChangeContent');
+    log('onDidChangeContent');
 });
 documents.onDidSave(e => {
-    trace('onDidSave');
+    log('onDidSave');
 });
 documents.onDidClose(e => {
-    trace('onDidClose');
+    log('onDidClose');
 });
 documents.listen(connection);
 connection.onInitialize(params => {
@@ -41,7 +47,9 @@ var MythrilRequest;
 })(MythrilRequest || (MythrilRequest = {}));
 connection.onRequest(MythrilRequest.active, (params) => __awaiter(this, void 0, void 0, function* () {
     const uri = params.textDocument.uri;
-    trace(uri);
+    let activeDoc = documents.get(uri);
+    let diagnostics = yield analysis_1.doAnalysis(activeDoc);
+    connection.sendDiagnostics({ uri, diagnostics });
     let result = undefined;
     return {
         documentVersion: 1

@@ -1,5 +1,3 @@
-import { Uri } from "vscode";
-
 export interface Solc {
     version: any,
     license: any,
@@ -22,7 +20,6 @@ export interface Solc {
 }
 
 export interface CompiledResult {
-    uri: Uri
     runtimeBytecode: string,
     srcmapRuntime: string
 }

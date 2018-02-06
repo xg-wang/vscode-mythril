@@ -8,27 +8,33 @@ import {
     TextDocuments,
 } from 'vscode-languageserver';
 
-function trace(message: string, verbose ? : string): void {
-    connection.tracer.log(message, verbose);
+import { doAnalysis } from './analysis';
+
+const connection: IConnection = createConnection(new IPCMessageReader(process), new IPCMessageWriter(process));
+
+export function log(message: string): void {
+    connection.console.log(message);
+}
+export function error(message: string): void {
+    connection.console.error(message);
 }
 
-let connection: IConnection = createConnection(new IPCMessageReader(process), new IPCMessageWriter(process));
-let documents: TextDocuments = new TextDocuments();
+const documents: TextDocuments = new TextDocuments();
 
 documents.onDidOpen(e => {
-    trace('onDidOpen');
+    log('onDidOpen');
 });
 
 documents.onDidChangeContent(e => {
-    trace('onDidChangeContent');
+    log('onDidChangeContent');
 });
 
 documents.onDidSave(e => {
-    trace('onDidSave');
+    log('onDidSave');
 });
 
 documents.onDidClose(e => {
-    trace('onDidClose');
+    log('onDidClose');
 });
 
 documents.listen(connection);
@@ -66,7 +72,10 @@ namespace MythrilRequest {
 
 connection.onRequest(MythrilRequest.active, async (params) => {
     const uri = params.textDocument.uri;
-    trace(uri)
+    let activeDoc = documents.get(uri);
+    let diagnostics = await doAnalysis(activeDoc);
+    connection.sendDiagnostics({ uri, diagnostics });
+
     let result: ActiveAnalysisParams | undefined = undefined;
     return {
         documentVersion: 1

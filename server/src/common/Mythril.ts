@@ -1,3 +1,4 @@
+import { Diagnostic, DiagnosticSeverity } from 'vscode-languageserver';
 import { MythrilOutput } from './mythril.d';
 import { exec } from 'child_process';
 import * as _ from 'lodash';
