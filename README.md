@@ -18,7 +18,7 @@
 
 ## Screenshot
 
-![screenshot](./screenshot.png)
+![screenshot](https://raw.githubusercontent.com/xg-wang/vscode-mythril/master/screenshot.png)
 
 ## Feature
 

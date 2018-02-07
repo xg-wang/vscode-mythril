@@ -2,7 +2,7 @@
     "name": "mythril",
     "displayName": "mythril",
     "description": "Visual Studio Code Solidity source code security checker",
-    "version": "0.0.1",
+    "version": "0.2.0",
     "publisher": "xgwang",
     "engines": {
         "vscode": "^1.16.0"
