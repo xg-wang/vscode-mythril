@@ -3,33 +3,36 @@ import { Range, Position, TextDocument } from "vscode-languageserver";
 
 export class SourceMap {
 
-    // TODO: only supports single file
-    private doc: TextDocument;
-    private srcMaps: {[contract: string]: string};
+    private sourceList: TextDocument[];
+    private srcmap: string[];
 
-    constructor(doc: TextDocument, srcMaps: {[fileContract: string]: string}) {
-        this.doc = doc;
-        this.srcMaps = _.mapKeys(srcMaps, (v, k) => _.last(k.split(':')));
+    constructor(docs: TextDocument[], srcMap: string) {
+        this.sourceList = docs;
+        this.srcmap = srcMap.split(';');
     }
 
     // http://solidity.readthedocs.io/en/develop/miscellaneous.html#source-mappings
-    public toRange(contract: string, idx: number): Range {
-        contract = _.last(contract.split(':'));
-        let srcmap = this.srcMaps[contract].split(';');
-        let start: number = NaN, len: number = NaN;
-        while (isNaN(start) || isNaN(len)) {
-            idx = _.findLastIndex(srcmap, s => {
+    public findRange(idx: number): { uri: string, range: Range } {
+        let start: number = NaN, len: number = NaN, fileIdx = NaN;
+        while (isNaN(start) || isNaN(len) || isNaN(fileIdx)) {
+            idx = _.findLastIndex(this.srcmap, s => {
                 let mapping = s.split(':');
                 start = start || Number.parseInt(mapping[0]);
                 if (mapping.length > 1) {
                     len = len || Number.parseInt(mapping[1]);
                 }
-                return !isNaN(start) && !isNaN(len);
+                if (mapping.length > 2) {
+                    fileIdx = fileIdx || Number.parseInt(mapping[2]);
+                }
+                return !isNaN(start) && !isNaN(len) && !isNaN(fileIdx);
             }, idx);
         }
         return {
-            start: this.doc.positionAt(start),
-            end:   this.doc.positionAt(start + len)
+            uri: this.sourceList[fileIdx].uri,
+            range: {
+                start: this.sourceList[fileIdx].positionAt(start),
+                end:   this.sourceList[fileIdx].positionAt(start + len)
+            }
         };
     }
 

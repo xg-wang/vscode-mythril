@@ -1,5 +1,5 @@
-import { Diagnostic, DiagnosticSeverity } from 'vscode-languageserver';
-import { MythrilOutput } from './mythril.d';
+import URI from 'vscode-uri';
+import { Diagnostic, DiagnosticSeverity, TextDocument } from 'vscode-languageserver';
 import { exec } from 'child_process';
 import * as _ from 'lodash';
 import {
@@ -10,7 +10,17 @@ import {
     trim
 } from 'lodash/fp';
 
-export function deserializeOutput(input: string, contract?: string): MythrilOutput[] {
+export interface MythrilOutput {
+    name: string,
+    type: string,
+    filePath: string, // filePath is only the file being analyzed
+    contract: string,
+    functionName: string,
+    pcAddress: number,
+    description: string
+}
+
+export function deserializeOutput(input: string, filePath: string): MythrilOutput[] {
     const separator = '--------------------';
     if (!input || !_.includes(input, separator)) {
         return [];
@@ -35,7 +45,8 @@ export function deserializeOutput(input: string, contract?: string): MythrilOutp
             const ret = {
                 name: lines[0].replace(/====/g, '').trim(),
                 type: getValue(lines[1]),
-                contract: contract, // getValue(lines[2]) is always MAIN if using bytecode
+                filePath: filePath,
+                contract: getValue(lines[2]),
                 functionName: getValue(lines[3]),
                 pcAddress: Number.parseInt(getValue(lines[4])),
                 description: lines.slice(5).join('\n'),
@@ -46,68 +57,65 @@ export function deserializeOutput(input: string, contract?: string): MythrilOutp
     )(input);
 }
 
-// NOTICE: `myth -x -c xxx` will lose contract name and always show MAIN,
-// maybe ask user to install solc and `myth -x xxx.sol` would be easier?
+// NOTICE: `myth -x -c xxx` will lose contract name and always show MAIN
 const MYTH_COMMAND = 'myth';
-export async function detectIssues(bytecodes: {[contract: string]: string}): Promise<MythrilOutput[]> {
-    return Promise.all(_.values(_.mapValues(bytecodes,
-        (bin, contract) => new Promise<MythrilOutput[]>((resolve, reject) => {
-            exec(
-                `${MYTH_COMMAND} -x -c ${bin}`,
-                (err, stdout, stderr) => {
-                    if (err) {
-                        reject(
-                            new Error(
-                                `An error occurred when running myth.
+export async function detectIssues(doc: TextDocument): Promise<MythrilOutput[]> {
+    return new Promise<MythrilOutput[]>((resolve, reject) => {
+        const filePath = URI.parse(doc.uri).fsPath;
+        exec(
+            `${MYTH_COMMAND} -x ${filePath}`,
+            (err, stdout, stderr) => {
+                if (err) {
+                    reject(
+                        new Error(
+                            `An error occurred when running myth.
     Output: ${stdout}
     Error Output: ${stderr}`,
-                            ),
-                        );
-                        return;
-                    }
-                    resolve(deserializeOutput(stdout, contract));
-                },
-            );
-        })))
-    ).then(arrays => _.flatten(arrays));
+                        ),
+                    );
+                    return;
+                }
+                resolve(deserializeOutput(stdout, filePath));
+            },
+        );
+    }).then(arrays => _.flatten(arrays));
 }
 
 // disassembly has following format
 // 0 PUSH1 0x60
 // 2 PUSH1 0x40
-// ...
-export type IdxMapping = {
-    [contract: string]: Map<number, number>
+// ...          =>  {0=>0,2=>1,...}
+export interface IdxMapping {
+    filePath: string,
+    map: Map<number, number>
 };
-export async function findIdxMapping(bytecodes: {[contract: string]: string}): Promise<IdxMapping> {
-    return Promise.all(_.values(_.mapValues(bytecodes,
-        (bin, contract) => new Promise<{contract: string, map: Map<number, number>}>((resolve, reject) => {
-            exec(
-                `${MYTH_COMMAND} -d -c ${bin}`,
-                (err, stdout, stderr) => {
-                    if (err) {
-                        reject(
-                            new Error(
-                                `An error occurred when running myth.
+export async function findIdxMapping(doc: TextDocument): Promise<IdxMapping> {
+    return new Promise<IdxMapping>((resolve, reject) => {
+        const filePath = URI.parse(doc.uri).fsPath;
+        exec(
+            `${MYTH_COMMAND} -d ${filePath}`,
+            (err, stdout, stderr) => {
+                if (err) {
+                    reject(
+                        new Error(
+                            `An error occurred when running myth.
     Output: ${stdout}
     Error Output: ${stderr}`,
-                            ),
-                        );
-                        return;
-                    }
-                    let map = new Map<number, number>();
-                    let disassembly = stdout
-                        .split('\n')
-                        .map(l => Number.parseInt(l.split(' ')[0]))
-                        .forEach((value, idx) => map.set(value, idx));
-                    resolve({contract: contract, map: map});
-                },
-            );
-        })))
-    ).then(mapsArray => {
-        return _.reduce(mapsArray, (result, value, key) => {
-            result[value.contract] = value.map;
-            return result;
-        }, {});
+                        ),
+                    );
+                    return;
+                }
+                const map = stdout
+                    .split('\n')
+                    .map(l => Number.parseInt(l.split(' ')[0]))
+                    .reduce((accumulator, value, idx) => {
+                        return accumulator.set(value, idx);
+                    }, new Map<number, number>());
+                resolve({
+                    filePath: filePath,
+                    map: map
+                });
+            },
+        );
     });
 }
