@@ -3,13 +3,16 @@
     "displayName": "mythril",
     "description": "Visual Studio Code Solidity source code security checker",
     "version": "0.0.1",
-    "publisher": "Xingan Wang",
+    "publisher": "xgwang",
     "engines": {
         "vscode": "^1.16.0"
     },
     "categories": [
         "Other"
     ],
+    "repository": {
+        "type": "https://github.com/xg-wang/vscode-mythril"
+    },
     "activationEvents": [
         "onLanguage:solidity",
         "onCommand:mythril.analyzeActive"
