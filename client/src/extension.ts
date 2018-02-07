@@ -45,7 +45,7 @@ export function activate(context: ExtensionContext) {
     let clientOptions: LanguageClientOptions = {
         documentSelector: ['solidity'],
         synchronize: {
-        	configurationSection: 'mythril'
+            configurationSection: 'mythril'
         },
         diagnosticCollectionName: 'mythril'
     }
@@ -53,17 +53,17 @@ export function activate(context: ExtensionContext) {
     let client = new LanguageClient('mythril', 'Solidity Security Server', serverOptions, clientOptions);
 
 
-	const running = 'Mythril is running.';
-	const stopped = 'Mythril has stopped.';
+    const running = 'Mythril is running.';
+    const stopped = 'Mythril has stopped.';
 
-	client.onDidChangeState((event) => {
-		if (event.newState === State.Running) {
-			client.info(running);
-			serverRunning = true;
-		} else {
-			client.info(stopped);
-			serverRunning = false;
-		}
+    client.onDidChangeState((event) => {
+        if (event.newState === State.Running) {
+            client.info(running);
+            serverRunning = true;
+        } else {
+            client.info(stopped);
+            serverRunning = false;
+        }
     });
 
     function checkServer() {

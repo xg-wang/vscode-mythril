@@ -26,8 +26,8 @@ export class SolcCompiler {
         return JSON.parse(input.substr(input.indexOf(`{"contracts":`)));
     }
 
-    compile(doc: TextDocument): Promise<CompileResult> {
-        const filePath = Uri.parse(doc.uri).fsPath;
+    compile(docUri: string): Promise<CompileResult> {
+        const filePath = Uri.parse(docUri).fsPath;
         return new Promise<CompileResult>((resolve, reject) => {
             exec(
                 `${SOLC_COMMAND} --combined-json srcmap-runtime ${filePath}`,

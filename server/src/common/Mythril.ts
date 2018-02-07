@@ -59,9 +59,9 @@ export function deserializeOutput(input: string, filePath: string): MythrilOutpu
 
 // NOTICE: `myth -x -c xxx` will lose contract name and always show MAIN
 const MYTH_COMMAND = 'myth';
-export async function detectIssues(doc: TextDocument): Promise<MythrilOutput[]> {
+export async function detectIssues(docUri: string): Promise<MythrilOutput[]> {
     return new Promise<MythrilOutput[]>((resolve, reject) => {
-        const filePath = URI.parse(doc.uri).fsPath;
+        const filePath = URI.parse(docUri).fsPath;
         exec(
             `${MYTH_COMMAND} -x ${filePath}`,
             (err, stdout, stderr) => {
@@ -89,9 +89,9 @@ export interface IdxMapping {
     filePath: string,
     map: Map<number, number>
 };
-export async function findIdxMapping(doc: TextDocument): Promise<IdxMapping> {
+export async function findIdxMapping(docUri: string): Promise<IdxMapping> {
     return new Promise<IdxMapping>((resolve, reject) => {
-        const filePath = URI.parse(doc.uri).fsPath;
+        const filePath = URI.parse(docUri).fsPath;
         exec(
             `${MYTH_COMMAND} -d ${filePath}`,
             (err, stdout, stderr) => {

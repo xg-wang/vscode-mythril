@@ -1,4 +1,5 @@
 import * as lodash from 'lodash';
+import * as fs from 'fs';
 import * as path from 'path';
 import {
     createConnection,
@@ -8,6 +9,7 @@ import {
     RequestType,
     TextDocumentIdentifier,
     TextDocuments,
+    Files,
 } from 'vscode-languageserver';
 import { Diagnostic, DiagnosticSeverity, PublishDiagnosticsParams, TextDocument } from 'vscode-languageserver';
 import Uri from 'vscode-uri';
@@ -50,7 +52,10 @@ documents.onDidClose(e => {
 
 documents.listen(connection);
 
+let rootPath: string;
+
 connection.onInitialize(params => {
+    rootPath = params.rootPath;
     return {
         capabilities: {
             textDocumentSync: documents.syncKind,
@@ -90,26 +95,28 @@ connection.onRequest(MythrilRequest.active, async (params) => {
     const uri = params.textDocument.uri;
     const activeDoc = documents.get(uri);
     try {
-        const diagnostics = await doAnalysis(activeDoc);
+        const diagnostics = await doAnalysis(activeDoc.uri);
         diagnostics.forEach(d => connection.sendDiagnostics(d));
         const n = diagnostics.reduce((acc, d) => {
             return acc + d.diagnostics.length;
         }, 0);
         return { status: Status.ok, numWarnings: n }
     } catch (error) {
-        error(error);
         return { status: Status.fail, numWarnings: 0 }
     }
 });
 
 connection.onRequest(MythrilRequest.all, async (params) => {
+    const files = [];
+        // fs.readdirSync(rootPath)
+        // .map(f => Uri.file(path.join(rootPath, f)).toString());
+        // TODO: documents can only handle opened files.
     try {
-        const docs = documents.all()
-            .filter(doc => path.extname(doc.uri) === '.sol');
+        const docs = lodash.union(files, documents.all().map(d => d.uri))
+            .filter(doc => path.extname(doc) === '.sol');
         const n = await Promise.all(
-            docs.map(doc => {
-                const uri = doc.uri;
-                return doAnalysis(doc).then( diagnostics => {
+            docs.map(docUri => {
+                return doAnalysis(docUri).then( diagnostics => {
                     diagnostics.forEach(d => connection.sendDiagnostics(d));
                     return Promise.resolve(diagnostics.reduce((acc, d) => {
                         return acc + d.diagnostics.length;
@@ -130,14 +137,14 @@ connection.listen();
  * 2. mythril analysis and ReverseMap
  * 3. map output issues to source, return diagnostics
  */
-export async function doAnalysis(doc: TextDocument): Promise<PublishDiagnosticsParams[]> {
+export async function doAnalysis(docUri: string): Promise<PublishDiagnosticsParams[]> {
     let compileResult;
     let mythrilOutput;
     let idxMapping;
     try {
-        compileResult = await new SolcCompiler().compile(doc);
-        mythrilOutput = await detectIssues(doc);
-        idxMapping = await findIdxMapping(doc);
+        compileResult = await new SolcCompiler().compile(docUri);
+        mythrilOutput = await detectIssues(docUri);
+        idxMapping = await findIdxMapping(docUri);
     } catch (error) {
         return Promise.reject(error);
     }

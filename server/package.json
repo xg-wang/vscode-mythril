@@ -8,11 +8,12 @@
 		"node": "*"
 	},
 	"dependencies": {
-		"vscode": "^1.1.5",
 		"@types/lodash": "^4.14.101",
 		"lodash": "^4.17.5",
 		"solc": "^0.4.19",
-		"vscode-languageserver": "^3.5.0"
+		"vscode": "^1.1.5",
+		"vscode-languageserver": "^3.5.0",
+		"vscode-uri": "^1.0.1"
 	},
 	"scripts": {
 		"installServer": "installServerIntoExtension ../client ./package.json ./tsconfig.json",
