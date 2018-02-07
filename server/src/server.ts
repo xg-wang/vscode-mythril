@@ -1,3 +1,4 @@
+import * as lodash from 'lodash';
 import * as path from 'path';
 import {
     createConnection,
@@ -29,14 +30,12 @@ export function error(message: string): void {
 const documents: TextDocuments = new TextDocuments();
 
 documents.onDidOpen(e => {
-    log('onDidOpen');
 });
 
 /**
  * Clear diagnostics once we start editing
  */
 documents.onDidChangeContent(e => {
-    log('onDidChangeContent');
     connection.sendDiagnostics({
         uri: e.document.uri,
         diagnostics: []
@@ -44,11 +43,9 @@ documents.onDidChangeContent(e => {
 });
 
 documents.onDidSave(e => {
-    log('onDidSave');
 });
 
 documents.onDidClose(e => {
-    log('onDidClose');
 });
 
 documents.listen(connection);
@@ -70,11 +67,13 @@ interface ActiveAnalysisParams {
 }
 interface ActiveAnalysisResult {
     status: Status;
+    numWarnings: number;
 }
 interface AllAnalysisParams {
 }
 interface AllAnalysisResult {
     status: Status;
+    numWarnings: number;
 }
 namespace MythrilRequest {
     export const active = new RequestType <
@@ -93,27 +92,34 @@ connection.onRequest(MythrilRequest.active, async (params) => {
     try {
         const diagnostics = await doAnalysis(activeDoc);
         diagnostics.forEach(d => connection.sendDiagnostics(d));
-        return { status: Status.ok }
+        const n = diagnostics.reduce((acc, d) => {
+            return acc + d.diagnostics.length;
+        }, 0);
+        return { status: Status.ok, numWarnings: n }
     } catch (error) {
         error(error);
-        return { status: Status.fail }
+        return { status: Status.fail, numWarnings: 0 }
     }
 });
 
 connection.onRequest(MythrilRequest.all, async (params) => {
     try {
-        documents.all()
-            .filter(doc => path.extname(doc.uri) === '.sol')
-            .map(async doc => {
+        const docs = documents.all()
+            .filter(doc => path.extname(doc.uri) === '.sol');
+        const n = await Promise.all(
+            docs.map(doc => {
                 const uri = doc.uri;
-                const diagnostics = await doAnalysis(doc);
-                diagnostics.forEach(d => connection.sendDiagnostics(d));
-            });
-        return { status: Status.ok }
+                return doAnalysis(doc).then( diagnostics => {
+                    diagnostics.forEach(d => connection.sendDiagnostics(d));
+                    return Promise.resolve(diagnostics.reduce((acc, d) => {
+                        return acc + d.diagnostics.length;
+                    }, 0));
+                });
+            })).then(arr => lodash.sum(arr));
+        return { status: Status.ok, numWarnings: n }
     } catch (error) {
-        return { status: Status.fail }
+        return { status: Status.fail, numWarnings: 0 }
     }
-
 });
 
 connection.listen();

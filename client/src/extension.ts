@@ -12,11 +12,13 @@ interface ActiveAnalysisParams {
 }
 interface ActiveAnalysisResult {
     status: Status;
+    numWarnings: number;
 }
 interface AllAnalysisParams {
 }
 interface AllAnalysisResult {
     status: Status;
+    numWarnings: number;
 }
 namespace MythrilRequest {
     export const active = new RequestType <
@@ -62,9 +64,17 @@ export function activate(context: ExtensionContext) {
 			client.info(stopped);
 			serverRunning = false;
 		}
-	});
+    });
+
+    function checkServer() {
+        if (!serverRunning) {
+            window.showInformationMessage(`Mythril starting...`);
+            return;
+        }
+    }
 
     async function analyzeActive(editor: TextEditor) {
+        checkServer();
         if (path.extname(editor.document.fileName) !== '.sol') {
             window.showWarningMessage('Open a Solidity file to analyze');
             return;
@@ -72,17 +82,17 @@ export function activate(context: ExtensionContext) {
         const uri = editor.document.uri.toString();
         try {
             let result = await client.sendRequest(MythrilRequest.active, { textDocument: {uri} });
-            console.log(result);
-            // TODO: if return value exists, open a new tab
+            window.showInformationMessage(`Mythril analysis finished, found ${result.numWarnings} issues`);
         } catch (error) {
             window.showErrorMessage('Failed to analyze Solidity file');
         }
     }
 
     async function analyzeAll() {
+        checkServer();
         try {
             let result = await client.sendRequest(MythrilRequest.all, { });
-            console.log(result);
+            window.showInformationMessage(`Mythril analysis finished, found ${result.numWarnings} issues`);
         } catch (error) {
             window.showErrorMessage('Failed to analyze Solidity files');
         }
