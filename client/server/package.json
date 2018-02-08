@@ -8,7 +8,7 @@
 		"node": "*"
 	},
 	"dependencies": {
-		"@types/lodash": "^4.14.101",
+		"@types/lodash": "^4.14.102",
 		"lodash": "^4.17.5",
 		"solc": "^0.4.19",
 		"vscode": "^1.1.5",
